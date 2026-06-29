@@ -1,6 +1,7 @@
 package ism.examen.badwallet_api.client.web.controller;
 
 import ism.examen.badwallet_api.client.web.dto.CreateWalletRequest;
+import ism.examen.badwallet_api.client.web.dto.DepositRequest;
 import ism.examen.badwallet_api.shared.response.PagedResponse;
 import ism.examen.badwallet_api.shared.response.RestResponse;
 import ism.examen.badwallet_api.wallet.data.entity.Wallet;
@@ -60,5 +61,14 @@ public class WalletController {
     public ResponseEntity<RestResponse<BigDecimal>> getWalletBalanceByPhoneNumber(@PathVariable String phoneNumber) {
         BigDecimal balance = walletService.getWalletBalanceByPhoneNumber(phoneNumber);
         return ResponseEntity.ok(RestResponse.success("Solde recupere avec succes.", balance));
+    }
+
+    @PostMapping("/{walletId}/deposit")
+    public ResponseEntity<RestResponse<String>> deposit(
+            @PathVariable Long walletId,
+            @RequestBody DepositRequest request
+    ) {
+        Wallet updatedWallet = walletService.deposit(walletId, request.amount(), request.paymentMethod());
+        return ResponseEntity.ok(RestResponse.success("Dépôt effectué avec succès. Nouveau solde : " + updatedWallet.getBalance(), null));
     }
 }

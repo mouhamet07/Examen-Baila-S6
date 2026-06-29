@@ -1,6 +1,7 @@
 package ism.examen.badwallet_api.wallet.service.impl;
 
 import ism.examen.badwallet_api.client.web.dto.CreateWalletRequest;
+import ism.examen.badwallet_api.shared.exception.BadRequestException;
 import ism.examen.badwallet_api.shared.exception.EntityNotFoundException;
 import ism.examen.badwallet_api.wallet.data.entity.Wallet;
 import ism.examen.badwallet_api.wallet.data.repository.WalletRepository;
@@ -77,5 +78,19 @@ public class WalletServiceImpl implements WalletService {
     @Override
     public BigDecimal getWalletBalanceByPhoneNumber(String phoneNumber) {
         return getWalletByPhoneNumber(phoneNumber).getBalance();
+    }
+
+    @Override
+    public Wallet deposit(Long walletId, BigDecimal amount, String paymentMethod) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BadRequestException("Le montant du dépôt doit être supérieur à zéro.");
+        }
+        if (paymentMethod == null || paymentMethod.isBlank()) {
+            throw new BadRequestException("La méthode de paiement est obligatoire.");
+        }
+        Wallet wallet = walletRepository.findById(walletId)
+                .orElseThrow(() -> new EntityNotFoundException("Wallet introuvable."));
+        wallet.setBalance(wallet.getBalance().add(amount));
+        return walletRepository.save(wallet);
     }
 }
