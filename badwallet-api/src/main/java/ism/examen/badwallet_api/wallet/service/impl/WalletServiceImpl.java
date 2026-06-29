@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -26,7 +26,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
 @Service
-@RequiredArgsConstructor
 public class WalletServiceImpl implements WalletService {
     private static final String CURRENCY = "XOF";
     private static final String WALLET_NOT_FOUND_MESSAGE = "Wallet introuvable.";
@@ -37,6 +36,7 @@ public class WalletServiceImpl implements WalletService {
     private final Random random = new Random();
     private final Map<String, List<TransactionResponse>> transactionsByPhone = new ConcurrentHashMap<>();
 
+    @Autowired
     public WalletServiceImpl(WalletRepository walletRepository, @Value("${payment.service.url:http://localhost:8081}") String paymentServiceUrl) {
         this.walletRepository = walletRepository;
         this.restClient = RestClient.builder().baseUrl(paymentServiceUrl).build();
