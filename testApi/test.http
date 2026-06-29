@@ -1,0 +1,22 @@
+@walletHost = http://localhost:8080
+@paymentHost = http://localhost:8081
+
+# ==========================================
+# PARTIE 1 : badwallet-api (Port 8080)
+# ==========================================
+
+### 1.1 Seeder la base de données badwallet-api (Async)
+POST {{walletHost}}/api/wallets/seed?numWallets=10&eventsPerWallet=100
+Content-Type: application/json
+
+### 1.2 Créer un nouveau portefeuille
+POST {{walletHost}}/api/wallets
+Content-Type: application/json
+
+{
+    "phoneNumber": "+221779998877",
+    "email": "testclient@gmail.com",
+    "initialBalance": 25000,
+    "code": "WLT-TEST001",
+    "currency": "XOF"
+}

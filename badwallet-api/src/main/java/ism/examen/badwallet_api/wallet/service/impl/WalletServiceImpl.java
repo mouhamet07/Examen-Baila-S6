@@ -1,5 +1,6 @@
 package ism.examen.badwallet_api.wallet.service.impl;
 
+import ism.examen.badwallet_api.client.web.dto.CreateWalletRequest;
 import ism.examen.badwallet_api.wallet.data.entity.Wallet;
 import ism.examen.badwallet_api.wallet.data.repository.WalletRepository;
 import ism.examen.badwallet_api.wallet.service.WalletService;
@@ -33,7 +34,7 @@ public class WalletServiceImpl implements WalletService {
             String code = "WLT-" + walletNumber;
             long min = MIN_BALANCE;
             long max = MAX_BALANCE;
-            long balanceValue = min + (long) (random.nextDouble() * (max - min));
+            long balanceValue = random.nextLong(min, max);
             BigDecimal balance = BigDecimal.valueOf(balanceValue);
             Wallet wallet = Wallet.builder()
                     .phoneNumber(phone)
@@ -45,5 +46,17 @@ public class WalletServiceImpl implements WalletService {
             wallets.add(wallet);
         }
         walletRepository.saveAll(wallets);
+    }
+
+    @Override
+    public void createWallet(CreateWalletRequest request) {
+        Wallet wallet = Wallet.builder()
+                .phoneNumber(request.phoneNumber())
+                .email(request.email())
+                .code(request.code())
+                .currency(request.currency())
+                .balance(request.initialBalance())
+                .build();
+        walletRepository.save(wallet);
     }
 }
