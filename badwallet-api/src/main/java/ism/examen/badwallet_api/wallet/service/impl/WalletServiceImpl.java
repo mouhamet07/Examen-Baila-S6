@@ -1,0 +1,49 @@
+package ism.examen.badwallet_api.wallet.service.impl;
+
+import ism.examen.badwallet_api.wallet.data.entity.Wallet;
+import ism.examen.badwallet_api.wallet.data.repository.WalletRepository;
+import ism.examen.badwallet_api.wallet.service.WalletService;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+@Service
+@RequiredArgsConstructor
+public class WalletServiceImpl implements WalletService {
+    private static final String CURRENCY = "XOF";
+    private static final long MIN_BALANCE = 5_000L;
+    private static final long MAX_BALANCE = 500_000L;
+    private final WalletRepository walletRepository;
+    private final Random random = new Random();
+    @Override
+    public void seedWallets(int numWallets, int eventsPerWallet) {
+        long count = walletRepository.count();
+        List<Wallet> wallets = new ArrayList<>();
+        long phoneNumber = 221770000000L + count;
+        long walletNumber = count + 1;
+        for (int i = 0; i < numWallets; i++) {
+            phoneNumber = phoneNumber + 1;
+            walletNumber = walletNumber + 1;
+            String phone = String.valueOf(phoneNumber);
+            String email = "wallet" + walletNumber + "@gmail.com";
+            String code = "WLT-" + walletNumber;
+            long min = MIN_BALANCE;
+            long max = MAX_BALANCE;
+            long balanceValue = min + (long) (random.nextDouble() * (max - min));
+            BigDecimal balance = BigDecimal.valueOf(balanceValue);
+            Wallet wallet = Wallet.builder()
+                    .phoneNumber(phone)
+                    .email(email)
+                    .code(code)
+                    .currency(CURRENCY)
+                    .balance(balance)
+                    .build();
+            wallets.add(wallet);
+        }
+        walletRepository.saveAll(wallets);
+    }
+}
