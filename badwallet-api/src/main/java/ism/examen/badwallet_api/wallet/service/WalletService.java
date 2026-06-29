@@ -2,6 +2,7 @@ package ism.examen.badwallet_api.wallet.service;
 
 import ism.examen.badwallet_api.client.web.dto.CreateWalletRequest;
 import ism.examen.badwallet_api.wallet.data.entity.Wallet;
+import java.math.BigDecimal;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -12,4 +13,8 @@ public interface WalletService {
     void createWallet(CreateWalletRequest request);
 
     Page<Wallet> getWallets(Pageable pageable);
+
+    Wallet getWalletByPhoneNumber(String phoneNumber);
+
+    BigDecimal getWalletBalanceByPhoneNumber(String phoneNumber);
 }

@@ -1,6 +1,7 @@
 package ism.examen.badwallet_api.wallet.service.impl;
 
 import ism.examen.badwallet_api.client.web.dto.CreateWalletRequest;
+import ism.examen.badwallet_api.shared.exception.EntityNotFoundException;
 import ism.examen.badwallet_api.wallet.data.entity.Wallet;
 import ism.examen.badwallet_api.wallet.data.repository.WalletRepository;
 import ism.examen.badwallet_api.wallet.service.WalletService;
@@ -31,7 +32,7 @@ public class WalletServiceImpl implements WalletService {
         for (int i = 0; i < numWallets; i++) {
             phoneNumber = phoneNumber + 1;
             walletNumber = walletNumber + 1;
-            String phone = String.valueOf(phoneNumber);
+            String phone = "+" + phoneNumber;
             String email = "wallet" + walletNumber + "@gmail.com";
             String code = "WLT-" + walletNumber;
             long min = MIN_BALANCE;
@@ -65,5 +66,16 @@ public class WalletServiceImpl implements WalletService {
     @Override
     public Page<Wallet> getWallets(Pageable pageable) {
         return walletRepository.findAll(pageable);
+    }
+
+    @Override
+    public Wallet getWalletByPhoneNumber(String phoneNumber) {
+        return walletRepository.findByPhoneNumber(phoneNumber)
+                .orElseThrow(() -> new EntityNotFoundException("Wallet introuvable."));
+    }
+
+    @Override
+    public BigDecimal getWalletBalanceByPhoneNumber(String phoneNumber) {
+        return getWalletByPhoneNumber(phoneNumber).getBalance();
     }
 }
