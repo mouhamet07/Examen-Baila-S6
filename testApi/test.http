@@ -69,3 +69,13 @@ Content-Type: application/json
     "serviceName": "ISM",
     "amount": 5000.00
 }
+
+### 1.10 Payer des factures spécifiques
+POST {{walletHost}}/api/wallets/pay-factures
+Content-Type: application/json
+
+{
+    "phoneNumber": "+221770000003",
+    "serviceName": "ISM",
+    "factureReferences": ["FAC-ISM-3-1", "FAC-ISM-3-3"]
+}

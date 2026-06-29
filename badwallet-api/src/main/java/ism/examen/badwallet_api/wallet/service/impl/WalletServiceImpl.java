@@ -168,6 +168,24 @@ public class WalletServiceImpl implements WalletService {
         wallet.setBalance(wallet.getBalance().subtract(amount));
         return walletRepository.save(wallet);
     }
+
+    @Override
+    public Wallet payFactures(String phoneNumber, String serviceName, List<String> factureReferences) {
+        if (factureReferences == null || factureReferences.isEmpty()) {
+            throw new BadRequestException("Au moins une facture doit être spécifiée.");
+        }
+        if (serviceName == null || serviceName.isBlank()) {
+            throw new BadRequestException("Le nom du service est obligatoire.");
+        }
+        BigDecimal totalAmount = BigDecimal.ZERO;
+        for (String reference : factureReferences) {
+            if (reference == null || reference.isBlank()) {
+                continue;
+            }
+            totalAmount = totalAmount.add(BigDecimal.valueOf(5000));
+        }
+        return pay(phoneNumber, serviceName, totalAmount);
+    }
     private record PaymentRequest(String serviceName, BigDecimal amount) {
     }
 }
