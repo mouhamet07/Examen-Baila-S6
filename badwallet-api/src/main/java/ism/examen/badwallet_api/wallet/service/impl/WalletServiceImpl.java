@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -58,5 +60,10 @@ public class WalletServiceImpl implements WalletService {
                 .balance(request.initialBalance())
                 .build();
         walletRepository.save(wallet);
+    }
+
+    @Override
+    public Page<Wallet> getWallets(Pageable pageable) {
+        return walletRepository.findAll(pageable);
     }
 }
