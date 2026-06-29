@@ -5,6 +5,7 @@ import ism.examen.badwallet_api.shared.response.PagedResponse;
 import ism.examen.badwallet_api.shared.response.RestResponse;
 import ism.examen.badwallet_api.wallet.data.entity.Wallet;
 import ism.examen.badwallet_api.wallet.service.WalletService;
+import java.math.BigDecimal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -53,5 +54,11 @@ public class WalletController {
     public ResponseEntity<RestResponse<Wallet>> getWalletByPhoneNumber(@PathVariable String phoneNumber) {
         Wallet wallet = walletService.getWalletByPhoneNumber(phoneNumber);
         return ResponseEntity.ok(RestResponse.success("Wallet recupere avec succes.", wallet));
+    }
+
+    @GetMapping("/{phoneNumber}/balance")
+    public ResponseEntity<RestResponse<BigDecimal>> getWalletBalanceByPhoneNumber(@PathVariable String phoneNumber) {
+        BigDecimal balance = walletService.getWalletBalanceByPhoneNumber(phoneNumber);
+        return ResponseEntity.ok(RestResponse.success("Solde recupere avec succes.", balance));
     }
 }
