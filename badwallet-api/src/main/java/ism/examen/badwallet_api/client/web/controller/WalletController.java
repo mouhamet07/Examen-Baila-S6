@@ -1,10 +1,15 @@
 package ism.examen.badwallet_api.client.web.controller;
 
 import ism.examen.badwallet_api.client.web.dto.CreateWalletRequest;
-import ism.examen.badwallet_api.shared.response.ApiResponse;
+import ism.examen.badwallet_api.shared.response.PagedResponse;
+import ism.examen.badwallet_api.shared.response.RestResponse;
+import ism.examen.badwallet_api.wallet.data.entity.Wallet;
 import ism.examen.badwallet_api.wallet.service.WalletService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,17 +24,27 @@ public class WalletController {
     private final WalletService walletService;
 
     @PostMapping("/seed")
-    public ResponseEntity<ApiResponse> seedWallets(
+    public ResponseEntity<RestResponse<String>> seedWallets(
             @RequestParam int numWallets,
             @RequestParam int eventsPerWallet
     ) {
         walletService.seedWallets(numWallets, eventsPerWallet);
-        return ResponseEntity.ok(new ApiResponse(numWallets + " wallets generé avec succès."));
+        return ResponseEntity.ok(RestResponse.success(numWallets + " wallets genere avec succes.", null));
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse> createWallet(@RequestBody CreateWalletRequest request) {
+    public ResponseEntity<RestResponse<String>> createWallet(@RequestBody CreateWalletRequest request) {
         walletService.createWallet(request);
-        return ResponseEntity.ok(new ApiResponse("Wallet crée avec succès."));
+        return ResponseEntity.ok(RestResponse.success("Wallet cree avec succes.", null));
+    }
+
+    @GetMapping
+    public ResponseEntity<RestResponse<PagedResponse<Wallet>>> getWallets(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        Page<Wallet> wallets = walletService.getWallets(PageRequest.of(page, size));
+        PagedResponse<Wallet> response = PagedResponse.fromPage(wallets);
+        return ResponseEntity.ok(RestResponse.success("Wallets recuperes avec succes.", response));
     }
 }
