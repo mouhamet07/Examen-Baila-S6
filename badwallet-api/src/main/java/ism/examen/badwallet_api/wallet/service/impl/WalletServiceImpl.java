@@ -1,6 +1,7 @@
 package ism.examen.badwallet_api.wallet.service.impl;
 
 import ism.examen.badwallet_api.client.web.dto.CreateWalletRequest;
+import ism.examen.badwallet_api.client.web.dto.InvoiceResponse;
 import ism.examen.badwallet_api.client.web.dto.TransactionResponse;
 import ism.examen.badwallet_api.shared.exception.BadRequestException;
 import ism.examen.badwallet_api.shared.exception.EntityNotFoundException;
@@ -10,7 +11,9 @@ import ism.examen.badwallet_api.wallet.service.WalletService;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -205,6 +208,33 @@ public class WalletServiceImpl implements WalletService {
     @Override
     public List<TransactionResponse> getTransactionsByPhoneNumber(String phoneNumber) {
         return transactionsByPhone.getOrDefault(phoneNumber, new ArrayList<>());
+    }
+
+    @Override
+    public List<InvoiceResponse> getCurrentInvoices(String code, String unite) {
+        InvoiceResponse[] invoices = restClient.get()
+                .uri(uriBuilder -> {
+                    uriBuilder.path("/api/factures/{code}/current");
+                    if (unite != null && !unite.isBlank()) {
+                        uriBuilder.queryParam("unite", unite);
+                    }
+                    return uriBuilder.build(code);
+                })
+                .retrieve()
+                .body(InvoiceResponse[].class);
+        return invoices == null ? new ArrayList<>() : Arrays.asList(invoices);
+    }
+
+    @Override
+    public List<InvoiceResponse> getInvoicesByPeriod(String code, LocalDate debut, LocalDate fin) {
+        InvoiceResponse[] invoices = restClient.get()
+                .uri(uriBuilder -> uriBuilder.path("/api/factures/{code}/periode")
+                        .queryParam("debut", debut)
+                        .queryParam("fin", fin)
+                        .build(code))
+                .retrieve()
+                .body(InvoiceResponse[].class);
+        return invoices == null ? new ArrayList<>() : Arrays.asList(invoices);
     }
 
     private void addTransaction(String phoneNumber, String type, BigDecimal amount, String description, String timestamp) {
