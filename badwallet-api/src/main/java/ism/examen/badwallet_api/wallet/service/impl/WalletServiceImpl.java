@@ -34,7 +34,7 @@ public class WalletServiceImpl implements WalletService {
             String code = "WLT-" + walletNumber;
             long min = MIN_BALANCE;
             long max = MAX_BALANCE;
-            long balanceValue = min + (long) (random.nextDouble() * (max - min));
+            long balanceValue = random.nextLong(min, max);
             BigDecimal balance = BigDecimal.valueOf(balanceValue);
             Wallet wallet = Wallet.builder()
                     .phoneNumber(phone)

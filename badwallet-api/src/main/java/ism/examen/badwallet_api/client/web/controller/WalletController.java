@@ -24,12 +24,12 @@ public class WalletController {
             @RequestParam int eventsPerWallet
     ) {
         walletService.seedWallets(numWallets, eventsPerWallet);
-        return ResponseEntity.ok(new ApiResponse(numWallets + " wallets generated successfully."));
+        return ResponseEntity.ok(new ApiResponse(numWallets + " wallets generé avec succès."));
     }
 
     @PostMapping
     public ResponseEntity<ApiResponse> createWallet(@RequestBody CreateWalletRequest request) {
         walletService.createWallet(request);
-        return ResponseEntity.ok(new ApiResponse("Wallet created successfully."));
+        return ResponseEntity.ok(new ApiResponse("Wallet crée avec succès."));
     }
 }
