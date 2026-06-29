@@ -93,4 +93,23 @@ public class WalletServiceImpl implements WalletService {
         wallet.setBalance(wallet.getBalance().add(amount));
         return walletRepository.save(wallet);
     }
+
+    @Override
+    public Wallet withdraw(String phoneNumber, BigDecimal amount) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BadRequestException("Le montant du retrait doit être supérieur à zéro.");
+        }
+        Wallet wallet = walletRepository.findByPhoneNumber(phoneNumber)
+                .orElseThrow(() -> new EntityNotFoundException("Wallet introuvable."));
+        BigDecimal fee = amount.multiply(BigDecimal.valueOf(0.01)).setScale(2, java.math.RoundingMode.HALF_UP);
+        if (fee.compareTo(BigDecimal.valueOf(5000)) > 0) {
+            fee = BigDecimal.valueOf(5000);
+        }
+        BigDecimal totalDebit = amount.add(fee);
+        if (wallet.getBalance().compareTo(totalDebit) < 0) {
+            throw new BadRequestException("Solde insuffisant pour effectuer ce retrait.");
+        }
+        wallet.setBalance(wallet.getBalance().subtract(totalDebit));
+        return walletRepository.save(wallet);
+    }
 }

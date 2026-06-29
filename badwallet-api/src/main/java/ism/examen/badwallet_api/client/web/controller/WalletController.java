@@ -2,6 +2,7 @@ package ism.examen.badwallet_api.client.web.controller;
 
 import ism.examen.badwallet_api.client.web.dto.CreateWalletRequest;
 import ism.examen.badwallet_api.client.web.dto.DepositRequest;
+import ism.examen.badwallet_api.client.web.dto.WithdrawRequest;
 import ism.examen.badwallet_api.shared.response.PagedResponse;
 import ism.examen.badwallet_api.shared.response.RestResponse;
 import ism.examen.badwallet_api.wallet.data.entity.Wallet;
@@ -70,5 +71,11 @@ public class WalletController {
     ) {
         Wallet updatedWallet = walletService.deposit(walletId, request.amount(), request.paymentMethod());
         return ResponseEntity.ok(RestResponse.success("Dépôt effectué avec succès. Nouveau solde : " + updatedWallet.getBalance(), null));
+    }
+
+    @PostMapping("/withdraw")
+    public ResponseEntity<RestResponse<String>> withdraw(@RequestBody WithdrawRequest request) {
+        Wallet updatedWallet = walletService.withdraw(request.phoneNumber(), request.amount());
+        return ResponseEntity.ok(RestResponse.success("Retrait effectué avec succès. Nouveau solde : " + updatedWallet.getBalance(), null));
     }
 }
