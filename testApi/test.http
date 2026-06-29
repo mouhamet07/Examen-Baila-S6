@@ -50,3 +50,12 @@ Content-Type: application/json
     "phoneNumber": "+221770000001",
     "amount": 10000.00
 }
+### 1.8 Effectuer un Transfert entre deux portefeuilles
+POST {{walletHost}}/api/wallets/transfer
+Content-Type: application/json
+
+{
+    "senderPhone": "+221770000001",
+    "receiverPhone": "+221770000002",
+    "amount": 2000.00
+}
