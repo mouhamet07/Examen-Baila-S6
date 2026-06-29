@@ -4,6 +4,7 @@ import ism.examen.badwallet_api.client.web.dto.CreateWalletRequest;
 import ism.examen.badwallet_api.client.web.dto.DepositRequest;
 import ism.examen.badwallet_api.client.web.dto.PayFacturesRequest;
 import ism.examen.badwallet_api.client.web.dto.PayRequest;
+import ism.examen.badwallet_api.client.web.dto.TransactionResponse;
 import ism.examen.badwallet_api.client.web.dto.TransferRequest;
 import ism.examen.badwallet_api.client.web.dto.WithdrawRequest;
 import ism.examen.badwallet_api.shared.response.PagedResponse;
@@ -11,6 +12,7 @@ import ism.examen.badwallet_api.shared.response.RestResponse;
 import ism.examen.badwallet_api.wallet.data.entity.Wallet;
 import ism.examen.badwallet_api.wallet.service.WalletService;
 import java.math.BigDecimal;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -98,5 +100,11 @@ public class WalletController {
     public ResponseEntity<RestResponse<String>> payFactures(@RequestBody PayFacturesRequest request) {
         Wallet updatedWallet = walletService.payFactures(request.phoneNumber(), request.serviceName(), request.factureReferences());
         return ResponseEntity.ok(RestResponse.success("Paiement des factures effectué avec succès. Nouveau solde : " + updatedWallet.getBalance(), null));
+    }
+
+    @GetMapping("/{phoneNumber}/transactions")
+    public ResponseEntity<RestResponse<List<TransactionResponse>>> getTransactionsByPhoneNumber(@PathVariable String phoneNumber) {
+        List<TransactionResponse> transactions = walletService.getTransactionsByPhoneNumber(phoneNumber);
+        return ResponseEntity.ok(RestResponse.success("Historique des transactions recuperé avec succès.", transactions));
     }
 }
