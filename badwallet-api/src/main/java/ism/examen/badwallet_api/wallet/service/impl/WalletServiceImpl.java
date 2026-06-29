@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class WalletServiceImpl implements WalletService {
     private static final String CURRENCY = "XOF";
+    private static final String WALLET_NOT_FOUND_MESSAGE = "Wallet introuvable.";
     private static final long MIN_BALANCE = 5_000L;
     private static final long MAX_BALANCE = 500_000L;
     private final WalletRepository walletRepository;
@@ -72,7 +73,7 @@ public class WalletServiceImpl implements WalletService {
     @Override
     public Wallet getWalletByPhoneNumber(String phoneNumber) {
         return walletRepository.findByPhoneNumber(phoneNumber)
-                .orElseThrow(() -> new EntityNotFoundException("Wallet introuvable."));
+                .orElseThrow(() -> new EntityNotFoundException(WALLET_NOT_FOUND_MESSAGE));
     }
 
     @Override
@@ -89,7 +90,7 @@ public class WalletServiceImpl implements WalletService {
             throw new BadRequestException("La méthode de paiement est obligatoire.");
         }
         Wallet wallet = walletRepository.findById(walletId)
-                .orElseThrow(() -> new EntityNotFoundException("Wallet introuvable."));
+                .orElseThrow(() -> new EntityNotFoundException(WALLET_NOT_FOUND_MESSAGE));
         wallet.setBalance(wallet.getBalance().add(amount));
         return walletRepository.save(wallet);
     }
@@ -100,7 +101,7 @@ public class WalletServiceImpl implements WalletService {
             throw new BadRequestException("Le montant du retrait doit être supérieur à zéro.");
         }
         Wallet wallet = walletRepository.findByPhoneNumber(phoneNumber)
-                .orElseThrow(() -> new EntityNotFoundException("Wallet introuvable."));
+                .orElseThrow(() -> new EntityNotFoundException(WALLET_NOT_FOUND_MESSAGE));
         BigDecimal fee = amount.multiply(BigDecimal.valueOf(0.01)).setScale(2, java.math.RoundingMode.HALF_UP);
         if (fee.compareTo(BigDecimal.valueOf(5000)) > 0) {
             fee = BigDecimal.valueOf(5000);
@@ -111,5 +112,29 @@ public class WalletServiceImpl implements WalletService {
         }
         wallet.setBalance(wallet.getBalance().subtract(totalDebit));
         return walletRepository.save(wallet);
+    }
+
+    @Override
+    public Wallet transfer(String senderPhone, String receiverPhone, BigDecimal amount) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BadRequestException("Le montant du transfert doit être supérieur à zéro.");
+        }
+        if (senderPhone == null || senderPhone.isBlank() || receiverPhone == null || receiverPhone.isBlank()) {
+            throw new BadRequestException("Les numéros de téléphone des deux wallets sont obligatoires.");
+        }
+        if (senderPhone.equals(receiverPhone)) {
+            throw new BadRequestException("Le sender et le receiver doivent être différents.");
+        }
+        Wallet sender = walletRepository.findByPhoneNumber(senderPhone)
+                .orElseThrow(() -> new EntityNotFoundException(WALLET_NOT_FOUND_MESSAGE));
+        Wallet receiver = walletRepository.findByPhoneNumber(receiverPhone)
+                .orElseThrow(() -> new EntityNotFoundException(WALLET_NOT_FOUND_MESSAGE));
+        if (sender.getBalance().compareTo(amount) < 0) {
+            throw new BadRequestException("Solde insuffisant pour effectuer ce transfert.");
+        }
+        sender.setBalance(sender.getBalance().subtract(amount));
+        receiver.setBalance(receiver.getBalance().add(amount));
+        walletRepository.save(sender);
+        return walletRepository.save(receiver);
     }
 }

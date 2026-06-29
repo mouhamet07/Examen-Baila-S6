@@ -15,4 +15,5 @@ public interface WalletService {
     BigDecimal getWalletBalanceByPhoneNumber(String phoneNumber);
     Wallet deposit(Long walletId, BigDecimal amount, String paymentMethod);
     Wallet withdraw(String phoneNumber, BigDecimal amount);
+    Wallet transfer(String senderPhone, String receiverPhone, BigDecimal amount);
 }
