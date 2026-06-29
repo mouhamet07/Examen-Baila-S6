@@ -12,4 +12,6 @@ public interface WalletService {
     void createWallet(CreateWalletRequest request);
 
     Page<Wallet> getWallets(Pageable pageable);
+
+    Wallet getWalletByPhoneNumber(String phoneNumber);
 }

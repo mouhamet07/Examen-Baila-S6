@@ -1,6 +1,7 @@
 package ism.examen.badwallet_api.wallet.service.impl;
 
 import ism.examen.badwallet_api.client.web.dto.CreateWalletRequest;
+import ism.examen.badwallet_api.shared.exception.EntityNotFoundException;
 import ism.examen.badwallet_api.wallet.data.entity.Wallet;
 import ism.examen.badwallet_api.wallet.data.repository.WalletRepository;
 import ism.examen.badwallet_api.wallet.service.WalletService;
@@ -65,5 +66,11 @@ public class WalletServiceImpl implements WalletService {
     @Override
     public Page<Wallet> getWallets(Pageable pageable) {
         return walletRepository.findAll(pageable);
+    }
+
+    @Override
+    public Wallet getWalletByPhoneNumber(String phoneNumber) {
+        return walletRepository.findByPhoneNumber(phoneNumber)
+                .orElseThrow(() -> new EntityNotFoundException("Wallet introuvable."));
     }
 }
