@@ -12,9 +12,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClient;
 
 @Service
 @RequiredArgsConstructor
@@ -24,7 +26,13 @@ public class WalletServiceImpl implements WalletService {
     private static final long MIN_BALANCE = 5_000L;
     private static final long MAX_BALANCE = 500_000L;
     private final WalletRepository walletRepository;
+    private final RestClient restClient;
     private final Random random = new Random();
+
+    public WalletServiceImpl(WalletRepository walletRepository, @Value("${payment.service.url:http://localhost:8081}") String paymentServiceUrl) {
+        this.walletRepository = walletRepository;
+        this.restClient = RestClient.builder().baseUrl(paymentServiceUrl).build();
+    }
     @Override
     public void seedWallets(int numWallets, int eventsPerWallet) {
         long count = walletRepository.count();
@@ -136,5 +144,48 @@ public class WalletServiceImpl implements WalletService {
         receiver.setBalance(receiver.getBalance().add(amount));
         walletRepository.save(sender);
         return walletRepository.save(receiver);
+    }
+
+    @Override
+    public Wallet pay(String phoneNumber, String serviceName, BigDecimal amount) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BadRequestException("Le montant du paiement doit être supérieur à zéro.");
+        }
+        if (serviceName == null || serviceName.isBlank()) {
+            throw new BadRequestException("Le nom du service est obligatoire.");
+        }
+        Wallet wallet = walletRepository.findByPhoneNumber(phoneNumber)
+                .orElseThrow(() -> new EntityNotFoundException(WALLET_NOT_FOUND_MESSAGE));
+        if (wallet.getBalance().compareTo(amount) < 0) {
+            throw new BadRequestException("Solde insuffisant pour effectuer ce paiement.");
+        }
+
+        restClient.post()
+                .uri("/api/payments")
+                .body(new PaymentRequest(serviceName, amount))
+                .retrieve()
+                .toBodilessEntity();
+        wallet.setBalance(wallet.getBalance().subtract(amount));
+        return walletRepository.save(wallet);
+    }
+
+    @Override
+    public Wallet payFactures(String phoneNumber, String serviceName, List<String> factureReferences) {
+        if (factureReferences == null || factureReferences.isEmpty()) {
+            throw new BadRequestException("Au moins une facture doit être spécifiée.");
+        }
+        if (serviceName == null || serviceName.isBlank()) {
+            throw new BadRequestException("Le nom du service est obligatoire.");
+        }
+        BigDecimal totalAmount = BigDecimal.ZERO;
+        for (String reference : factureReferences) {
+            if (reference == null || reference.isBlank()) {
+                continue;
+            }
+            totalAmount = totalAmount.add(BigDecimal.valueOf(5000));
+        }
+        return pay(phoneNumber, serviceName, totalAmount);
+    }
+    private record PaymentRequest(String serviceName, BigDecimal amount) {
     }
 }
