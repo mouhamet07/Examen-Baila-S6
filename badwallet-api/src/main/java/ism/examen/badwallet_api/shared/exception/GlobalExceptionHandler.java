@@ -24,6 +24,12 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.NOT_FOUND)
                 .body(RestResponse.error(exception.getMessage(), HttpStatus.NOT_FOUND));
     }
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<RestResponse<Void>> handleBadRequest(BadRequestException exception) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(RestResponse.error(exception.getMessage(), HttpStatus.BAD_REQUEST));
+    }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<RestResponse<Void>> handleDataIntegrityViolation() {

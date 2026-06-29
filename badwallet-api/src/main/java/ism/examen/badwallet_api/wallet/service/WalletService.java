@@ -9,12 +9,9 @@ import org.springframework.data.domain.Pageable;
 public interface WalletService {
 
     void seedWallets(int numWallets, int eventsPerWallet);
-
     void createWallet(CreateWalletRequest request);
-
     Page<Wallet> getWallets(Pageable pageable);
-
     Wallet getWalletByPhoneNumber(String phoneNumber);
-
     BigDecimal getWalletBalanceByPhoneNumber(String phoneNumber);
+    Wallet deposit(Long walletId, BigDecimal amount, String paymentMethod);
 }
