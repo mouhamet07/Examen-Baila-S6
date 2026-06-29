@@ -1,9 +1,11 @@
 package ism.examen.badwallet_api.wallet.service;
 
 import ism.examen.badwallet_api.client.web.dto.CreateWalletRequest;
+import ism.examen.badwallet_api.client.web.dto.InvoiceResponse;
 import ism.examen.badwallet_api.client.web.dto.TransactionResponse;
 import ism.examen.badwallet_api.wallet.data.entity.Wallet;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,4 +23,6 @@ public interface WalletService {
     Wallet pay(String phoneNumber, String serviceName, BigDecimal amount);
     Wallet payFactures(String phoneNumber, String serviceName, List<String> factureReferences);
     List<TransactionResponse> getTransactionsByPhoneNumber(String phoneNumber);
+    List<InvoiceResponse> getCurrentInvoices(String code, String unite);
+    List<InvoiceResponse> getInvoicesByPeriod(String code, LocalDate debut, LocalDate fin);
 }
