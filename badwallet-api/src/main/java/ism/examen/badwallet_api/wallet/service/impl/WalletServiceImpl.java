@@ -1,6 +1,7 @@
 package ism.examen.badwallet_api.wallet.service.impl;
 
 import ism.examen.badwallet_api.client.web.dto.CreateWalletRequest;
+import ism.examen.badwallet_api.client.web.dto.TransactionResponse;
 import ism.examen.badwallet_api.shared.exception.BadRequestException;
 import ism.examen.badwallet_api.shared.exception.EntityNotFoundException;
 import ism.examen.badwallet_api.wallet.data.entity.Wallet;
@@ -8,9 +9,12 @@ import ism.examen.badwallet_api.wallet.data.repository.WalletRepository;
 import ism.examen.badwallet_api.wallet.service.WalletService;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -28,6 +32,7 @@ public class WalletServiceImpl implements WalletService {
     private final WalletRepository walletRepository;
     private final RestClient restClient;
     private final Random random = new Random();
+    private final Map<String, List<TransactionResponse>> transactionsByPhone = new ConcurrentHashMap<>();
 
     public WalletServiceImpl(WalletRepository walletRepository, @Value("${payment.service.url:http://localhost:8081}") String paymentServiceUrl) {
         this.walletRepository = walletRepository;
@@ -71,6 +76,7 @@ public class WalletServiceImpl implements WalletService {
                 .balance(request.initialBalance())
                 .build();
         walletRepository.save(wallet);
+        addTransaction(request.phoneNumber(), "CREATE", request.initialBalance(), "Création du wallet", Instant.now().toString());
     }
 
     @Override
@@ -100,7 +106,9 @@ public class WalletServiceImpl implements WalletService {
         Wallet wallet = walletRepository.findById(walletId)
                 .orElseThrow(() -> new EntityNotFoundException(WALLET_NOT_FOUND_MESSAGE));
         wallet.setBalance(wallet.getBalance().add(amount));
-        return walletRepository.save(wallet);
+        Wallet savedWallet = walletRepository.save(wallet);
+        addTransaction(wallet.getPhoneNumber(), "DEPOSIT", amount, "Dépôt", Instant.now().toString());
+        return savedWallet;
     }
 
     @Override
@@ -119,7 +127,9 @@ public class WalletServiceImpl implements WalletService {
             throw new BadRequestException("Solde insuffisant pour effectuer ce retrait.");
         }
         wallet.setBalance(wallet.getBalance().subtract(totalDebit));
-        return walletRepository.save(wallet);
+        Wallet savedWallet = walletRepository.save(wallet);
+        addTransaction(wallet.getPhoneNumber(), "WITHDRAW", totalDebit, "Retrait", Instant.now().toString());
+        return savedWallet;
     }
 
     @Override
@@ -143,7 +153,10 @@ public class WalletServiceImpl implements WalletService {
         sender.setBalance(sender.getBalance().subtract(amount));
         receiver.setBalance(receiver.getBalance().add(amount));
         walletRepository.save(sender);
-        return walletRepository.save(receiver);
+        Wallet savedReceiver = walletRepository.save(receiver);
+        addTransaction(sender.getPhoneNumber(), "TRANSFER_OUT", amount, "Transfert vers " + receiverPhone, Instant.now().toString());
+        addTransaction(receiver.getPhoneNumber(), "TRANSFER_IN", amount, "Transfert depuis " + senderPhone, Instant.now().toString());
+        return savedReceiver;
     }
 
     @Override
@@ -166,7 +179,9 @@ public class WalletServiceImpl implements WalletService {
                 .retrieve()
                 .toBodilessEntity();
         wallet.setBalance(wallet.getBalance().subtract(amount));
-        return walletRepository.save(wallet);
+        Wallet savedWallet = walletRepository.save(wallet);
+        addTransaction(wallet.getPhoneNumber(), "PAYMENT", amount, "Paiement " + serviceName, Instant.now().toString());
+        return savedWallet;
     }
 
     @Override
@@ -186,6 +201,17 @@ public class WalletServiceImpl implements WalletService {
         }
         return pay(phoneNumber, serviceName, totalAmount);
     }
+
+    @Override
+    public List<TransactionResponse> getTransactionsByPhoneNumber(String phoneNumber) {
+        return transactionsByPhone.getOrDefault(phoneNumber, new ArrayList<>());
+    }
+
+    private void addTransaction(String phoneNumber, String type, BigDecimal amount, String description, String timestamp) {
+        transactionsByPhone.computeIfAbsent(phoneNumber, key -> new ArrayList<>())
+                .add(new TransactionResponse(type, amount, description, timestamp));
+    }
+
     private record PaymentRequest(String serviceName, BigDecimal amount) {
     }
 }
